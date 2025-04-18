@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивен тест по българска литература</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Добавяне на шрифт Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Стил за бутоните с отговори */
+        .answer-btn {
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+        .answer-btn:hover {
+            background-color: #e2e8f0; /* Светло сиво при посочване */
+        }
+        .answer-btn:active {
+            transform: scale(0.98); /* Леко смаляване при клик */
+        }
+        /* Стил за избрания бутон */
+        .selected {
+            background-color: #60a5fa; /* Синьо за избран отговор */
+            color: white;
+        }
+        /* Стил за правилен отговор */
+        .correct {
+            background-color: #4ade80; /* Зелено за правилен отговор */
+            color: white;
+            border-color: #22c55e;
+        }
+        /* Стил за грешен отговор */
+        .incorrect {
+            background-color: #f87171; /* Червено за грешен отговор */
+            color: white;
+            border-color: #ef4444;
+        }
+        /* Стил за показване на правилния отговор при грешка */
+        .show-correct {
+             background-color: #a3e635; /* Светло зелено за показване на верния */
+             color: #3f6212;
+             border-color: #84cc16;
+        }
+         /* Стил за съобщението за обратна връзка и обяснение */
+        #feedback {
+            min-height: 4rem; /* Осигурява място за съобщението и обяснението */
+            transition: opacity 0.5s ease-in-out;
+        }
+        .explanation-text {
+            font-size: 0.9rem; /* Малко по-малък шрифт за обяснението */
+            color: #4b5563; /* По-тъмно сиво */
+            margin-top: 0.5rem; /* Отстояние отгоре */
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-2xl">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-6">Тест по българска литература</h1>
+
+        <div id="quiz-container">
+            <div id="question-container" class="mb-6">
+                <p id="question-text" class="text-lg md:text-xl text-gray-700 font-semibold mb-4"></p>
+                <div id="answer-buttons" class="grid grid-cols-1 gap-3">
+                    </div>
+            </div>
+            <div id="feedback" class="text-center font-medium mb-4"></div>
+            <div class="flex justify-between items-center mt-6">
+                 <p id="progress-text" class="text-sm text-gray-500"></p>
+                 <button id="next-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
+                     Провери
+                 </button>
+            </div>
+        </div>
+
+        <div id="results-container" class="hidden text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Вашият резултат</h2>
+            <p id="score-text" class="text-4xl font-bold text-blue-600 mb-6"></p>
+            <p id="result-message" class="text-lg text-gray-700 mb-6"></p>
+            <button id="restart-btn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-lg shadow transition duration-300 ease-in-out">
+                Започни отначало
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Дефиниране на въпросите, отговорите и обясненията
+        const questions = [
+            {
+                question: "Какъв е символичният смисъл на \"железния светилник\" в романа на Димитър Талев?",
+                answers: [
+                    { text: "А) Неугасимата семейна любов през поколенията.", correct: false },
+                    { text: "Б) Пробуждането на българския дух, съзнание и достойнство по време на робството.", correct: true },
+                    { text: "В) Твърдостта на османската власт и нейната нерушимост.", correct: false },
+                    { text: "Г) Краят на патриархалните порядки и настъпването на модерността.", correct: false }
+                ],
+                explanation: "Светилникът символизира искрата на българщината, която се предава през поколенията и осветява пътя към пробуждането и свободата."
+            },
+            {
+                question: "Защо идеята на Бай Ганьо да издава вестник \"Народно величие\" изглежда абсурдна за неговите приятели?",
+                answers: [
+                    { text: "А) Защото те смятат, че издаването на вестник е твърде скъпо начинание.", correct: false },
+                    { text: "Б) Защото Бай Ганьо няма достатъчно познания за журналистиката.", correct: false },
+                    { text: "В) Защото те го познават като безпринципен човек, целящ лична изгода, което противоречи на идеята за \"народно величие\".", correct: true },
+                    { text: "Г) Защото приятелите му вече издават друг вестник и не искат конкуренция.", correct: false }
+                ],
+                explanation: "Приятелите на Бай Ганьо са наясно с неговата липса на морал и стремеж към облагодетелстване, което е в пълен разрез с възвишената идея за \"народно величие\"."
+            },
+            {
+                question: "Как Станислав Стратиев представя понятието \"балкански синдром\" в своята пиеса?",
+                answers: [
+                    { text: "А) Като съвкупност от положителни черти, характерни за балканските народи.", correct: false },
+                    { text: "Б) Като медицинско състояние, засягащо предимно хората на Балканите.", correct: false },
+                    { text: "В) Като съвкупност от нестандартни, често парадоксални и абсурдни черти, отклонение от общоприетото, което е синоним на българския характер.", correct: true },
+                    { text: "Г) Като политическа доктрина, определяща отношенията между балканските държави.", correct: false }
+                ],
+                explanation: "Стратиев използва \"балкански синдром\" като метафора за специфичните, често абсурдни и нелогични черти на манталитета, които вижда като характерни за българите и балканците."
+            },
+            {
+                question: "Коя е основната тема, която свързва одата \"Паисий\" на Иван Вазов?",
+                answers: [
+                    { text: "А) Описанието на красотата на българската природа и Рилския манастир.", correct: false },
+                    { text: "Б) Трагичната съдба на българския народ под османско владичество.", correct: false },
+                    { text: "В) Възхвалата на личността и делото на Паисий Хилендарски като основоположник на българското Възраждане.", correct: true },
+                    { text: "Г) Призивът за незабавна борба срещу поробителите.", correct: false }
+                ],
+                explanation: "Цялата ода е посветена на възхвала на Паисий и неговата \"История славянобългарска\", която пробужда националното самосъзнание."
+            },
+            {
+                question: "Как Никола Вапцаров представя \"обикновените хора\" в стихотворението \"История\"?",
+                answers: [
+                    { text: "А) Като пасивни наблюдатели на историческите събития.", correct: false },
+                    { text: "Б) Като виновници за социалните несправедливости.", correct: false },
+                    { text: "В) Като истинските творци на историята, чиито \"лутания, неволи, заблуди и прозрения\" трябва да бъдат запомнени.", correct: true },
+                    { text: "Г) Като герои, които винаги са на страната на властта.", correct: false }
+                ],
+                explanation: "Вапцаров издига на пиедестал обикновения човек, твърдейки, че историята се гради от неговите ежедневни борби, страдания и стремежи, а не само от великите личности."
+            },
+            {
+                question: "Какъв е основният конфликт в разказа \"Андрешко\" на Елин Пелин и как героят го разрешава?",
+                answers: [
+                    { text: "А) Конфликт между Андрешко и съселяните му за земя, разрешен чрез съдебен процес.", correct: false },
+                    { text: "Б) Конфликт между бедността на селяните и богатството на градските жители, разрешен чрез бунт.", correct: false },
+                    { text: "В) Конфликт между закона на държавата (в лицето на съдия-изпълнителя) и закона на съвестта и съпричастието (в лицето на Андрешко), разрешен чрез хитрост и поставяне на морала над закона.", correct: true },
+                    { text: "Г) Конфликт между старото и новото поколение в селото, разрешен чрез компромис.", correct: false }
+                ],
+                explanation: "Андрешко избира да помогне на бедния си съселянин, като излъже и изостави съдия-изпълнителя, поставяйки човешката солидарност над формалния закон."
+            },
+            {
+                question: "Как лирическият говорител в \"До моето първо либе\" на Христо Ботев противопоставя любовта към либето и дълга към народа?",
+                answers: [
+                    { text: "А) Той твърди, че любовта към либето е по-силна от всичко друго.", correct: false },
+                    { text: "Б) Той призовава либето да се включи заедно с него в борбата за свобода.", correct: false },
+                    { text: "В) Той категорично отхвърля личното щастие и любовта в името на страданията на народа и борбата за свобода.", correct: true },
+                    { text: "Г) Той търси начин да съчетае личните си чувства с обществения си дълг.", correct: false }
+                ],
+                explanation: "За Ботевия лирически герой дългът към отечеството и борбата за свобода са върховна ценност, пред която любовта и личното щастие трябва да отстъпят."
+            },
+            {
+                question: "Каква е ролята на природния пейзаж в поемата \"Градушка\" на Пейо Яворов?",
+                answers: [
+                    { text: "А) Той служи само като красив фон на трагичните събития.", correct: false },
+                    { text: "Б) Той контрастира с мъката на селяните, като подчертава величието на природата.", correct: false },
+                    { text: "В) Той е изпълнен с образи на разрушение и безизходица, отразяващи трагичната обреченост на селянина пред стихията и е символ на жестоката страна на природата.", correct: true },
+                    { text: "Г) Той е източник на утеха и надежда за селяните.", correct: false }
+                ],
+                explanation: "Природната стихия (градушката) в поемата е представена като враждебна и унищожителна сила, която отнема надеждата на селянина и символизира неговата трагична зависимост от природата."
+            },
+            {
+                question: "Кой е основният мотив в стихотворението \"Аз искам да те помня все така\" на Димчо Дебелянов?",
+                answers: [
+                    { text: "А) Желанието за вечна любов и щастие.", correct: false },
+                    { text: "Б) Описание на красотата на любимата.", correct: false },
+                    { text: "В) Споменът за любимата на фона на предстояща или вече случила се раздяла, причинена от смъртта, което придава интензивност на любовните преживявания.", correct: true },
+                    { text: "Г) Борбата срещу социалното неравенство.", correct: false }
+                ],
+                explanation: "Стихотворението е елегия, пропита с тъга по изгубената или недостижима любима, като споменът за нея се превръща в основен мотив на фона на предчувствието за смърт."
+            },
+            {
+                question: "Какво е нестандартното в \"молитвата\" на лирическия Аз в стихотворението \"Молитва\" на Атанас Далчев?",
+                answers: [
+                    { text: "А) Използването на нецензурен език в обръщението към Бога.", correct: false },
+                    { text: "Б) Липсата на конкретни молби, свързани с материални нужди.", correct: false },
+                    { text: "В) Формално е обърната към Бога, но по-скоро представлява изповед към самия себе си, търсене на освобождение от самотата и сливане с обикновените хора и света.", correct: true },
+                    { text: "Г) Желанието за власт и богатство.", correct: false }
+                ],
+                explanation: "Далчевата \"молитва\" не е традиционно обръщение към Бога с молби, а по-скоро философски размисъл и изповед за желанието на Аз-а да преодолее своята отчужденост и да се слее с делничния свят."
+            }
+        ];
+
+        // Вземане на референции към HTML елементи
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const questionTextElement = document.getElementById('question-text');
+        const answerButtonsElement = document.getElementById('answer-buttons');
+        const feedbackElement = document.getElementById('feedback');
+        const progressTextElement = document.getElementById('progress-text');
+        const nextButton = document.getElementById('next-btn');
+        const scoreTextElement = document.getElementById('score-text');
+        const resultMessageElement = document.getElementById('result-message');
+        const restartButton = document.getElementById('restart-btn');
+
+        // Променливи за състоянието на теста
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answerSelected = false;
+
+        // Функция за стартиране на теста
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            answerSelected = false;
+            resultsContainer.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            nextButton.textContent = 'Провери';
+            nextButton.disabled = true;
+            showQuestion();
+        }
+
+        // Функция за показване на текущия въпрос и отговори
+        function showQuestion() {
+            resetState();
+            const currentQuestion = questions[currentQuestionIndex];
+            questionTextElement.textContent = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+            progressTextElement.textContent = `Въпрос ${currentQuestionIndex + 1} от ${questions.length}`;
+
+            currentQuestion.answers.forEach(answer => {
+                const button = document.createElement('button');
+                button.textContent = answer.text;
+                button.classList.add('answer-btn', 'w-full', 'text-left', 'p-3', 'border', 'border-gray-300', 'rounded-lg', 'hover:bg-gray-100', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-300');
+                button.dataset.correct = answer.correct;
+                button.addEventListener('click', selectAnswer);
+                answerButtonsElement.appendChild(button);
+            });
+        }
+
+        // Функция за нулиране на състоянието преди показване на нов въпрос
+        function resetState() {
+            feedbackElement.innerHTML = ''; // Изчистване на съдържанието (включително обяснението)
+            feedbackElement.className = 'text-center font-medium mb-4'; // Връщане на стандартните класове
+            nextButton.disabled = true;
+            nextButton.textContent = 'Провери';
+            answerSelected = false;
+            while (answerButtonsElement.firstChild) {
+                answerButtonsElement.removeChild(answerButtonsElement.firstChild);
+            }
+        }
+
+        // Функция, която се извиква при избор на отговор
+        function selectAnswer(e) {
+            if (answerSelected) return;
+
+            const selectedButton = e.target;
+            // Премахване на селекция от други бутони и деактивиране
+            Array.from(answerButtonsElement.children).forEach(button => {
+                 button.classList.remove('selected');
+                 button.disabled = true; // Деактивиране след първия клик преди проверка
+            });
+            selectedButton.classList.add('selected'); // Маркиране на избрания
+
+            answerSelected = true;
+            nextButton.disabled = false; // Активиране на бутона "Провери"
+        }
+
+        // Функция за проверка на отговора и показване на обяснение
+        function checkAnswer() {
+             const selectedButton = answerButtonsElement.querySelector('.selected');
+             if (!selectedButton) return;
+
+             const isCorrect = selectedButton.dataset.correct === 'true';
+             const explanation = questions[currentQuestionIndex].explanation; // Вземане на обяснението
+
+             // Прилагане на стилове за правилен/грешен отговор
+             Array.from(answerButtonsElement.children).forEach(button => {
+                 button.disabled = true; // Потвърждаване, че бутоните са деактивирани
+                 const correct = button.dataset.correct === 'true';
+                 if (correct) {
+                     if (button.classList.contains('selected')) {
+                         button.classList.remove('selected');
+                         button.classList.add('correct');
+                     } else if (!isCorrect) { // Показване на верния, само ако потребителят е сгрешил
+                         button.classList.add('show-correct');
+                     }
+                 } else if (button.classList.contains('selected')) {
+                     button.classList.remove('selected');
+                     button.classList.add('incorrect');
+                 }
+             });
+
+             // Показване на обратна връзка и обяснение
+             let feedbackHTML = '';
+             if (isCorrect) {
+                 feedbackHTML = `<div class="text-green-600 font-semibold">Правилно!</div>`;
+                 score++;
+             } else {
+                 feedbackHTML = `<div class="text-red-600 font-semibold">Грешно!</div>`;
+             }
+             // Добавяне на обяснението
+             feedbackHTML += `<div class="explanation-text">${explanation}</div>`;
+             feedbackElement.innerHTML = feedbackHTML; // Показване на обратната връзка и обяснението
+
+             nextButton.textContent = 'Следващ';
+             nextButton.disabled = false; // Бутонът "Следващ" е активен
+        }
+
+
+        // Функция за показване на следващ въпрос или резултати
+        function handleNextButton() {
+            if (nextButton.textContent === 'Провери') {
+                checkAnswer(); // Първо проверяваме отговора
+            } else {
+                // Преминаване към следващ въпрос или показване на резултати
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    showQuestion();
+                } else {
+                    showResults();
+                }
+            }
+        }
+
+        // Функция за показване на крайните резултати
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+
+            scoreTextElement.textContent = `${score} / ${questions.length}`;
+
+            let message = '';
+            const percentage = (score / questions.length) * 100;
+            if (percentage === 100) {
+                message = 'Отлично! Знаете всичко!';
+            } else if (percentage >= 70) {
+                message = 'Много добър резултат! Поздравления!';
+            } else if (percentage >= 50) {
+                message = 'Добре се справихте, но има още какво да научите.';
+            } else {
+                message = 'Трябва да положите повече усилия. Опитайте отново!';
+            }
+            resultMessageElement.textContent = message;
+        }
+
+        // Добавяне на event listener-и към бутоните
+        nextButton.addEventListener('click', handleNextButton);
+        restartButton.addEventListener('click', startQuiz);
+
+        // Стариране на теста при зареждане на страницата
+        startQuiz();
+    </script>
+</body>
+</html>
